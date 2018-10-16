@@ -32,3 +32,19 @@ SYSCALL_DEFINE1(set_orientation, struct dev_orientation __user *, orient)
   // __print_orient_k();
   return 23;
 }
+
+
+SYSCALL_DEFINE1(orientevt_create, struct orientation_range __user *, orient){
+  printk(KERN_ERR "Gang: orientevt_create done.\n");
+  return 327;
+}
+
+SYSCALL_DEFINE1(orientevt_destroy, int, event_id){
+  printk(KERN_ERR "Gang: orientevt_destroy done.\n");
+  return 328;
+}
+
+SYSCALL_DEFINE1(orientevt_wait, int, event_id){
+  printk(KERN_ERR "Gang: orientevt_wait done.\n");
+  return 329;
+}

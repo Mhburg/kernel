@@ -20,6 +20,13 @@ struct dev_orientation {
   int roll;    /* rotation around Y-axis: +Y == -roll, -180<=roll<=180 */
 };
 
+struct orientation_range {
+  struct dev_orientation orient;  /* device orientation */
+  unsigned int azimuth_range;     /* +/- degrees around Z-axis */
+  unsigned int pitch_range;       /* +/- degrees around X-axis */
+  unsigned int roll_range;        /* +/- degrees around Y-axis */
+};
+
 static struct dev_orientation_k current_orient;
 
 #endif
