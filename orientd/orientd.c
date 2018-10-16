@@ -63,6 +63,15 @@ int main(int argc, char **argv)
 	  exit(EXIT_FAILURE);
 	}
 
+	/* syscall 327, 328, 329 test */
+	struct orientation_range orient_r;
+	int orientevt_create_ret = orientevt_create(&orient_r);
+	int orientevt_destroy_ret = orientevt_destroy(0);
+	int orientevt_wait_ret = orientevt_wait(0);
+	fprintf(f, "orientevt create ret: %d\n", orientevt_create_ret);
+	fprintf(f, "orientevt destroy ret: %d\n", orientevt_destroy_ret);
+	fprintf(f, "orientevt wait ret: %d\n", orientevt_wait_ret);
+
 	struct dev_orientation orientation;
 
 	while (true) {
