@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <hardware/hardware.h>
 #include <hardware/sensors.h>
@@ -32,20 +34,52 @@ int main(int argc, char **argv)
 
 	/********** Demo code begins **********/
 	/* Replace demo code with your daemon */
+	pid_t pid, sid;
+
+	pid = fork();
+	if (pid < 0){
+          /* fork() failed */
+	  exit(EXIT_FAILURE);
+	} else if (pid > 0){
+	  /* parent process exits */
+	  exit(EXIT_SUCCESS);
+	}
+
+	umask(0);
+	char logfile[] = "/data/misc/orientd.log";
+	FILE *f = fopen(logfile, "a");
+
+	/*create a new session ID for child */
+	sid = setsid();
+	if(sid < 0){
+	  fclose(f);
+	  exit(EXIT_FAILURE);
+	}
+
+	int chdir_ret = chdir("/");
+	if(chdir_ret < 0){
+	  fclose(f);
+	  printf("chdir failed, ret=%d\n", chdir_ret);
+	  exit(EXIT_FAILURE);
+	}
+
 	struct dev_orientation orientation;
 
 	while (true) {
 		if (poll_sensor_data(device, &orientation)) {
-			printf("No data received!\n");
+		  fprintf(f, "No data received!\n");
 		} else {
-			printf("azimuth = %d, pitch = %d, roll = %d\n",
+		  fprintf(f, "azimuth = %d, pitch = %d, roll = %d\n",
 			       orientation.azimuth, orientation.pitch,
 			       orientation.roll);
 		}
 		usleep(100000);
+		int ret = set_orientation(&orientation);
+		fprintf(f,"set_orientation ret : %d\n", ret);
 	}
-	/*********** Demo code ends ***********/
 
+	/*********** Demo code ends ***********/
+	fclose(f);
 	return EXIT_SUCCESS;
 }
 
