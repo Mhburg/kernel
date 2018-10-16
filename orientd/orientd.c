@@ -44,6 +44,9 @@ int main(int argc, char **argv)
 		}
 		usleep(100000);
 	}
+
+	int ret = set_orientation(&orientation);
+	printf("ret is : %d\n", ret);
 	/*********** Demo code ends ***********/
 
 	return EXIT_SUCCESS;
