@@ -39,11 +39,17 @@ int main(int argc, char **argv)
       /* child: wait for orient event */
       while(1){
         int wait_ret = orientevt_wait(event_id);
-        if (wait_ret < 0){
-	  /*event not found, exit*/
-	  printf("exiting child process, pid: %d", getpid());
-	  exit(EXIT_SUCCESS);
+	if (wait_ret < 0){
+          /*system failure, exit*/
+          printf("system failure, exiting child process, pid: %d", getpid());
+          exit(EXIT_FAILURE);
+        }
+        if (wait_ret > 0){
+          /*event not found, exit*/
+          printf("Event not found, exiting child process, pid: %d", getpid());
+          exit(EXIT_SUCCESS);
 	}
+
 	printf("%d: facing up!", i);
 
 	/* sleep some time according to hw3 instructions */
