@@ -17,7 +17,7 @@ static int child_polling_inteval = 1;
 
 int main(int argc, char **argv)
 {
-  /* when screen faces straigh towards me, azimuth = +/-180, pitch = 0, roll = +/-180 */
+  /* when phone backside faces straigh towards me, azimuth = +/-180, pitch = 0, roll = +/-180 */
   struct dev_orientation orient_facedown = {180, 0, 180};
   /* +/-5 degrees for error, roll error does not matter because it can rotate */
   struct orientation_range orient_r = {orient_facedown, 5, 5, 0};
