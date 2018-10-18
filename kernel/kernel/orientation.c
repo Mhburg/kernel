@@ -49,7 +49,18 @@ SYSCALL_DEFINE1(set_orientation, struct dev_orientation __user *, orient)
           if (tmp < 0){
               return -ECHILD;
           } else if (tmp > 0){
+              int ret;
               atomic64_set(&orient_reader, tmp);
+              ret = kfifo_alloc(&orient_fifo, QUEUE_SIZE, GFP_KERNEL);
+              if (ret)
+                  return ret;
+              evt_head = (struct list_head){ &(evt_head), &(evt_head) };
+              // evt_head = LIST_HEAD_INIT(evt_head);
+              rwlock_init(evt_head_lock);
+
+
+
+              
               return 0;
           } else {
               /* in child process */
@@ -65,14 +76,14 @@ SYSCALL_DEFINE1(set_orientation, struct dev_orientation __user *, orient)
                       if (kfifo_out(&orient_fifo, orient, sizeof(struct dev_orientation)) != sizeof(struct dev_orientation))
                           return -EINVAL;
 
-                      read_lock(&evt_head_lock);
+                      read_lock(evt_head_lock);
                       list_for_each_entry(curr, &evt_head, head){
                           read_lock(curr->rwlock);
                           if (orient_within_range(orient, &curr->range))
                               wake_up(curr->wq);
                           read_unlock(curr->rwlock);
                       }
-                      read_unlock(&evt_head_lock);
+                      read_unlock(evt_head_lock);
                   }
               }
 
@@ -99,13 +110,13 @@ SYSCALL_DEFINE1(orientevt_create, struct orientation_range __user *, orient){
       return -EINVAL;
 
   struct event_t *curr;
-  write_lock(&evt_head_lock);
+  write_lock(evt_head_lock);
   list_for_each_entry(curr, &evt_head, head){
       write_lock(curr->rwlock);
       if (event_equal(&evt->range, &curr->range)){
          int id  = ++curr->ref_count;
          write_unlock(curr->rwlock);
-         write_unlock(&evt_head_lock);
+         write_unlock(evt_head_lock);
          return id;
       } 
       write_unlock(curr->rwlock);
@@ -123,13 +134,13 @@ SYSCALL_DEFINE1(orientevt_create, struct orientation_range __user *, orient){
 
   evt->destory = 0;
   evt->ref_count = 0;
-  LIST_HEAD_INIT(evt->head);
+  evt->head = (struct list_head){ &(evt->head), &(evt->head) };
   init_waitqueue_head(evt->wq);
   rwlock_init(evt->rwlock);
 
   list_add(&evt->head, &evt_head);
   int id = evt->id;
-  write_unlock(&evt_head_lock);
+  write_unlock(evt_head_lock);
 
   return id;
 }
@@ -143,7 +154,7 @@ SYSCALL_DEFINE1(orientevt_destroy, int, event_id){
   } 
 
   struct event_t *curr;
-  read_lock(&evt_head_lock);
+  read_lock(evt_head_lock);
   list_for_each_entry(curr, &evt_head, head){
       if (id == curr->id){
           write_lock(curr->rwlock);
@@ -151,13 +162,13 @@ SYSCALL_DEFINE1(orientevt_destroy, int, event_id){
           if (curr->destory == 0 && curr->ref_count == 0){
               write_unlock(curr->rwlock);
               /* maintain the order when acquiring locks */
-              write_lock(&evt_head_lock);
+              write_lock(evt_head_lock);
               write_lock(curr->rwlock);
               /* check again in case orientevt_create is called */
               if (curr->destory == 0 && curr->ref_count == 0){
                   rwlock_t *tmplock = curr->rwlock;
                   list_del(&(curr)->head);
-                  write_unlock(&evt_head_lock);
+                  write_unlock(evt_head_lock);
                   kfree(curr);
                   write_unlock(tmplock);
                   return 0;
@@ -180,10 +191,10 @@ SYSCALL_DEFINE1(orientevt_wait, int, event_id){
 
   DEFINE_WAIT(wait);
   struct event_t *curr;
-  read_lock(&evt_head_lock);
+  read_lock(evt_head_lock);
   list_for_each_entry(curr, &evt_head, head){
       if (id == curr->id){
-         read_unlock(&evt_head_lock);
+         read_unlock(evt_head_lock);
          write_lock(curr->rwlock);
          ++curr->ref_count;
          write_unlock(curr->rwlock); 
@@ -197,7 +208,7 @@ SYSCALL_DEFINE1(orientevt_wait, int, event_id){
       }
   }
 
-  read_unlock(&evt_head_lock);
+  read_unlock(evt_head_lock);
   return -1;
 }
 

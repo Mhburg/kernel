@@ -7,7 +7,7 @@
 #include <linux/list.h>
 #include <linux/types.h>
 
-#define QUEUE_SIZE (2 ^ 10)
+#define QUEUE_SIZE (2 ^ 20)
 
 atomic64_t orient_reader;
 DEFINE_SPINLOCK(orient_reader_lock);
@@ -50,13 +50,15 @@ struct event_t{
 };
 
 /* orientation data queue */
-// static kfifo orient_fifo;
-static DECLARE_KFIFO(orient_fifo, struct dev_orientation, QUEUE_SIZE);
-INIT_KFIFO(orient_fifo);
+static struct kfifo orient_fifo;
+// static DECLARE_KFIFO(orient_fifo, struct dev_orientation, QUEUE_SIZE);
+// INIT_KFIFO(orient_fifo);
 
 /* event linked list */
-static LIST_HEAD(evt_head);
-static DEFINE_RWLOCK(evt_head_lock);
+static struct list_head evt_head;
+static rwlock_t *evt_head_lock;
+// static LIST_HEAD(evt_head);
+// static DEFINE_RWLOCK(evt_head_lock);
 
 static __always_inline int event_equal(struct orientation_range *, struct orientation_range *);
 
