@@ -19,6 +19,8 @@
 
 #include "orientd.h"
 
+#define __DEBUG_LEVEL 1 /* 0 for no debug output, 1 for print, 2 for output to file */
+
 static int open_sensors(struct sensors_module_t **sensors,
 			struct sensors_poll_device_t **device);
 static int poll_sensor_data(struct sensors_poll_device_t *device,
@@ -45,20 +47,26 @@ int main(int argc, char **argv)
 	  exit(EXIT_SUCCESS);
 	}
 
+#if (__DEBUG_LEVEL == 2)
 	umask(0);
 	char logfile[] = "/data/misc/orientd.log";
 	FILE *f = fopen(logfile, "a");
+#endif
 
 	/*create a new session ID for child */
 	sid = setsid();
 	if(sid < 0){
+#if (__DEBUG_LEVEL == 2)
 	  fclose(f);
+#endif
 	  exit(EXIT_FAILURE);
 	}
 
 	int chdir_ret = chdir("/");
 	if(chdir_ret < 0){
+#if (__DEBUG_LEVEL == 2)
 	  fclose(f);
+#endif
 	  printf("chdir failed, ret=%d\n", chdir_ret);
 	  exit(EXIT_FAILURE);
 	}
@@ -68,27 +76,39 @@ int main(int argc, char **argv)
 	int orientevt_create_ret = orientevt_create(&orient_r);
 	int orientevt_destroy_ret = orientevt_destroy(0);
 	int orientevt_wait_ret = orientevt_wait(0);
+
+#if (__DEBUG_LEVEL == 2)
+	umask(0);
 	fprintf(f, "orientevt create ret: %d\n", orientevt_create_ret);
 	fprintf(f, "orientevt destroy ret: %d\n", orientevt_destroy_ret);
 	fprintf(f, "orientevt wait ret: %d\n", orientevt_wait_ret);
+#endif
 
 	struct dev_orientation orientation;
 
 	while (true) {
 		if (poll_sensor_data(device, &orientation)) {
+#if (__DEBUG_LEVEL == 2)
 		  fprintf(f, "No data received!\n");
+#endif
 		} else {
+#if (__DEBUG_LEVEL == 2)
 		  fprintf(f, "azimuth = %d, pitch = %d, roll = %d\n",
 			       orientation.azimuth, orientation.pitch,
 			       orientation.roll);
+#endif
 		}
 		usleep(100000);
 		int ret = set_orientation(&orientation);
+#if (__DEBUG_LEVEL == 2)
 		fprintf(f,"set_orientation ret : %d\n", ret);
+#endif
 	}
 
 	/*********** Demo code ends ***********/
+#if (__DEBUG_LEVEL == 2)
 	fclose(f);
+#endif
 	return EXIT_SUCCESS;
 }
 
