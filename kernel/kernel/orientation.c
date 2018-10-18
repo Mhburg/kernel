@@ -104,10 +104,12 @@ SYSCALL_DEFINE1(orientevt_create, struct orientation_range __user *, orient){
   struct event_t *evt = (struct event_t *)kmalloc(sizeof(struct event_t), GFP_KERNEL);
   printk(KERN_ERR "Gang: orientevt_create done.\n");
 
-  if (evt)
+  if (!evt)
       return -ENOMEM;
   if (copy_from_user(&evt->range, orient, sizeof(struct orientation_range)) > 0)
       return -EINVAL;
+
+  printk(KERN_ERR "Zizhen: orientevt_create user data copied .\n");
 
   struct event_t *curr;
   write_lock(evt_head_lock);
@@ -117,6 +119,7 @@ SYSCALL_DEFINE1(orientevt_create, struct orientation_range __user *, orient){
          int id  = ++curr->ref_count;
          write_unlock(curr->rwlock);
          write_unlock(evt_head_lock);
+         printk(KERN_ERR "Zizhen: orientevt_create increase ref_count.\n");
          return id;
       } 
       write_unlock(curr->rwlock);
@@ -142,6 +145,7 @@ SYSCALL_DEFINE1(orientevt_create, struct orientation_range __user *, orient){
   int id = evt->id;
   write_unlock(evt_head_lock);
 
+  printk(KERN_ERR "Gang: orientevt_create added new event.\n");
   return id;
 }
 
