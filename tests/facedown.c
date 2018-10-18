@@ -43,17 +43,16 @@ int main(int argc, char **argv)
           /*system failure, exit*/
           printf("system failure, exiting child process, pid: %d", getpid());
           exit(EXIT_FAILURE);
-        }
-	if (wait_ret > 0){
+        } else if (wait_ret > 0){
           /*event not found, exit*/
           printf("Event not found, exiting child process, pid: %d", getpid());
           exit(EXIT_SUCCESS);
+        } else {
+            printf("%d: facing down!", i);
         }
 
-	printf("%d: facing down!", i);
-
-	/* sleep some time according to hw3 instructions */
-	sleep(child_polling_inteval);
+	    /* sleep some time according to hw3 instructions */
+        sleep(child_polling_inteval);
       }
     }
 

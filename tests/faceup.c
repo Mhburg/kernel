@@ -35,25 +35,24 @@ int main(int argc, char **argv)
       printf("fork failed\n");
       orientevt_destroy(event_id);
       exit(EXIT_FAILURE);
-    } else if(pid == 0) {
-      /* child: wait for orient event */
-      while(1){
+    } else if (pid == 0) {
+        /* child: wait for orient event */
+        while(1){
         int wait_ret = orientevt_wait(event_id);
-	if (wait_ret < 0){
+        if (wait_ret < 0){
           /*system failure, exit*/
           printf("system failure, exiting child process, pid: %d", getpid());
           exit(EXIT_FAILURE);
-        }
-        if (wait_ret > 0){
+        } else if (wait_ret > 0){
           /*event not found, exit*/
           printf("Event not found, exiting child process, pid: %d", getpid());
           exit(EXIT_SUCCESS);
-	}
+        } else {
+            fprintf(stderr, "%d: facing up!", i);
+        }
 
-	printf("%d: facing up!", i);
-
-	/* sleep some time according to hw3 instructions */
-	sleep(child_polling_inteval);
+	    /* sleep some time according to hw3 instructions */
+        sleep(child_polling_inteval);
       }
     }
 
